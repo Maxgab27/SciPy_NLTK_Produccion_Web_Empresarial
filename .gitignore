@@ -1,0 +1,14 @@
+# Ignorar dependencias de Node
+node_modules/
+**/node_modules/
+
+# Ignorar carpetas de compilación y temporales de Vite
+dist/
+**/dist/
+.vite/
+**/.vite/
+
+# Ignorar archivos sueltos autogenerados
+*.js
+*.map
+.env

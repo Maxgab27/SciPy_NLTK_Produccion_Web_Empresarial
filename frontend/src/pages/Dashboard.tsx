@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+// Importamos componentes de gráficos simples
+import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, BarChart, Bar } from 'recharts';
 
 /* ── tipos locales ── */
 interface Metricas {
@@ -19,21 +21,69 @@ interface Comentario {
 }
 
 /* ── datos de demostración ── */
-const DEMO_METRICAS: Metricas = { media: 17.2, desviacion_estandar: 4.29, mediana: 17.5, coeficiente_variacion: 24.94, interpretacion: 'Variabilidad moderada' };
+const DEMO_METRICAS: Metricas = { media: 17.02, desviacion_estandar: 4.29, mediana: 17.05, coeficiente_variacion: 24.94, interpretacion: 'Variabilidad moderada' };
 const DEMO_KEYWORDS: Keyword[] = [{ palabra: 'servicio', frecuencia: 12 }, { palabra: 'atencion', frecuencia: 9 }, { palabra: 'rapido', frecuencia: 7 }, { palabra: 'soporte', frecuencia: 5 }];
 const DEMO_COMENTARIOS: Comentario[] = [
   { id: '1', cliente_nombre: 'Carlos Mendoza', fecha: '2026-09-01', tiempo_atencion_minutos: 15, comentario: 'Excelente atencion y soporte rapido.' },
   { id: '2', cliente_nombre: 'Mariana Silva',  fecha: '2026-09-01', tiempo_atencion_minutos: 25, comentario: 'Demora en la entrega del informe.' },
 ];
 
-const MODULOS = [
-  { to: '/metricas',     title: 'Metricas SciPy',  desc: 'Estadistica e Interpolacion — Ejercicios 1 y 3' },
-  { to: '/optimizacion', title: 'Optimizacion',     desc: 'Minimizacion de costos — Ejercicio 2' },
-  { to: '/comentarios',  title: 'Comentarios',      desc: 'Keywords NLTK — Ejercicio 4' },
-  { to: '/analisis-nlp', title: 'Analisis NLP',     desc: 'Clasificacion y Busqueda — Ejercicios 5 y 6' },
-  { to: '/clientes',     title: 'Clientes',         desc: 'Directorio y tiempos de atencion' },
-  { to: '/reportes',     title: 'Reportes',         desc: 'Informe ejecutivo consolidado' },
+// Datos ficticios para rellenar tus nuevos gráficos simulando SciPy
+const DATA_GRAFICO_DISTRIBUCION = [
+  { name: 'Min 10', cantidad: 2 },
+  { name: 'Min 14', cantidad: 7 },
+  { name: 'Min 17', cantidad: 15 },
+  { name: 'Min 20', cantidad: 9 },
+  { name: 'Min 25', cantidad: 3 },
 ];
+
+/* ── Componente de Tarjeta con Animación de Carga de Números ── */
+interface KpiCardProps {
+  label: string;
+  targetValue: number; // El número final al que debe llegar
+  unit?: string;
+}
+function AnimatedKpiCard({ label, targetValue, unit = "min" }: KpiCardProps) {
+  const [displayValue, setDisplayValue] = useState(0);
+
+  useEffect(() => {
+    if (!targetValue) return;
+    setDisplayValue(0); // Reiniciar cada vez que entras o carga
+    
+    let inicio = 0;
+    const duracion = 1000; // 1 segundo que tarda en subir el número
+    const pasos = 30;
+    const incremento = targetValue / pasos;
+    const intervaloTiempo = duracion / pasos;
+
+    const cronometro = setInterval(() => {
+      inicio += incremento;
+      if (inicio >= targetValue) {
+        setDisplayValue(targetValue);
+        clearInterval(cronometro);
+      } else {
+        setDisplayValue(Number(inicio.toFixed(2)));
+      }
+    }, intervaloTiempo);
+
+    return () => clearInterval(cronometro);
+  }, [targetValue]);
+
+  // Formatear visualmente a estilo reloj "17:02" si es necesario o dejar decimal limpio
+  const stringValue = displayValue.toFixed(2).replace('.', ':');
+
+  return (
+    <div style={estilos.kpiCardGranel}>
+      <div style={estilos.kpiTextContainer}>
+        <p style={estilos.kpiLabelBig}>{label}</p>
+      </div>
+      <div style={estilos.kpiNumberContainer}>
+        <span style={estilos.kpiValueBig}>{stringValue}</span>
+        <span style={estilos.kpiUnitBig}>{unit}</span>
+      </div>
+    </div>
+  );
+}
 
 export default function Dashboard() {
   const [metricas, setMetricas]   = useState<Metricas | null>(null);
@@ -45,7 +95,7 @@ export default function Dashboard() {
   const [tiempo,  setTiempo]      = useState(15);
   const [texto,   setTexto]       = useState('');
 
-  const BASE = '/api';   // Vite proxy -> http://localhost:8000
+  const BASE = '/api';
 
   const cargar = async () => {
     try {
@@ -82,136 +132,246 @@ export default function Dashboard() {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-
-      {/* Cabecera */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem', borderBottom: '1px solid #e2e8f0', paddingBottom: '1.25rem' }}>
+    <div style={estilos.dashboardWrapper}>
+      
+      {/* Cabecera con el Fondo Degradado Azul solicitado */}
+            {/* Cabecera (Restaurada al diseño original) */}
+      <div style={estilos.cabeceraOriginal}>
         <div>
-          <p style={{ margin: 0, fontSize: '0.75rem', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Panel de Control Ejecutivo</p>
-          <h2 style={{ margin: '0.2rem 0 0.25rem', fontSize: '1.5rem', fontWeight: 700, color: '#0f172a' }}>Centro Inteligente de Atencion</h2>
-          <p style={{ margin: 0, fontSize: '0.85rem', color: '#64748b' }}>SciPy (calculo numerico) + NLTK (procesamiento de texto) en arquitectura desacoplada.</p>
+          <p style={estilos.cabeceraSubtitleOriginal}>Panel de Control Ejecutivo</p>
+          <h2 style={estilos.cabeceraTitleOriginal}>Centro Inteligente de Atencion</h2>
+          <p style={estilos.cabeceraDescOriginal}>SciPy (calculo numerico) + NLTK (procesamiento de texto) en arquitectura desacoplada.</p>
         </div>
         <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
-          <span style={{ fontSize: '0.78rem', padding: '0.3rem 0.7rem', borderRadius: '4px', border: '1px solid #e2e8f0', backgroundColor: online ? '#f0fdf4' : '#f8fafc', color: online ? '#166534' : '#475569', fontWeight: 500 }}>
+          <span style={{ 
+            fontSize: '0.78rem', 
+            padding: '0.3rem 0.7rem', 
+            borderRadius: '4px', 
+            border: '1px solid #e2e8f0', 
+            backgroundColor: online ? '#f0fdf4' : '#f8fafc', 
+            color: online ? '#166534' : '#475569', 
+            fontWeight: 500 
+          }}>
             {online === null ? 'Conectando...' : online ? 'Backend Activo (:8000)' : 'Modo Demostracion'}
           </span>
-          <button onClick={cargar} style={btnDark}>Actualizar</button>
+          <button onClick={cargar} style={estilos.btnDark}>Actualizar</button>
         </div>
       </div>
 
-      {/* 1. Indicadores SciPy — Ejercicio 1 */}
-      <section>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
-          <h3 style={sectionTitle}>1. Indicadores de Tiempos de Atencion — SciPy</h3>
-          <code style={badge}>scipy.stats</code>
+      {/* 1. Indicadores SciPy */}
+      <section style={{ padding: '0 1.5rem' }}>
+        <div style={estilos.sectionHeader}>
+          <h3 style={estilos.sectionTitle}>1. Indicadores de Tiempos de Atencion — SciPy</h3>
+          <code style={estilos.badge}>scipy.stats</code>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
-          <KpiCard label="Tiempo Promedio"       value={`${metricas?.media ?? '-'} min`}           code="np.mean(tiempos)" />
-          <KpiCard label="Desviacion Estandar"   value={`±${metricas?.desviacion_estandar ?? '-'} min`} code="np.std(ddof=1)" />
-          <KpiCard label="Mediana"               value={`${metricas?.mediana ?? '-'} min`}          code="np.median(tiempos)" />
-          <KpiCard label="Coef. de Variacion"    value={`${metricas?.coeficiente_variacion ?? '-'}%`} sub={metricas?.interpretacion} />
+        
+        {/* Fila superior: Las dos grandes tarjetas animadas (Tiempo Promedio y Mediana) */}
+        <div style={estilos.kpiRowTop}>
+          <AnimatedKpiCard label="Tiempo Promedio" targetValue={metricas?.media ?? 17.02} />
+          <AnimatedKpiCard label="Mediana" targetValue={metricas?.mediana ?? 17.05} />
+        </div>
+
+        {/* Fila Inferior: Espacio asignado para tus dos gráficos dinámicos */}
+        <div style={estilos.chartsGrid}>
+          {/* Gráfico 1: Desviación Estándar (Representado con área suave) */}
+          <div style={estilos.chartCard}>
+            <p style={estilos.chartCardLabel}>Distribución de Tiempos & Desviación (±{metricas?.desviacion_estandar ?? '4.29'} min)</p>
+            <div style={{ width: '100%', height: 180 }}>
+              <ResponsiveContainer>
+                <AreaChart data={DATA_GRAFICO_DISTRIBUCION}>
+                  <XAxis dataKey="name" stroke="#94a3b8" fontSize={11} />
+                  <Tooltip />
+                  <Area type="monotone" dataKey="cantidad" stroke="#3b82f6" fillOpacity={0.1} fill="#3b82f6" />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          {/* Gráfico 2: Coeficiente de Variación (Representado en barras de frecuencia) */}
+          <div style={estilos.chartCard}>
+            <p style={estilos.chartCardLabel}>Coeficiente de Variación ({metricas?.coeficiente_variacion ?? '24.94'}%) — {metricas?.interpretacion ?? 'Estable'}</p>
+            <div style={{ width: '100%', height: 180 }}>
+              <ResponsiveContainer>
+                <BarChart data={DATA_GRAFICO_DISTRIBUCION}>
+                  <XAxis dataKey="name" stroke="#94a3b8" fontSize={11} />
+                  <Tooltip />
+                  <Bar dataKey="cantidad" fill="#1067b9" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
         </div>
       </section>
 
-      {/* 2. Keywords NLTK — Ejercicio 4 */}
-      <section>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
-          <h3 style={sectionTitle}>2. Terminos Frecuentes en Comentarios — NLTK</h3>
-          <code style={badge}>Counter.most_common</code>
+      {/* 2. Keywords NLTK */}
+      <section style={{ padding: '0 1.5rem' }}>
+        <div style={estilos.sectionHeader}>
+          <h3 style={estilos.sectionTitle}>2. Terminos Frecuentes en Comentarios — NLTK</h3>
+          <code style={estilos.badge}>Counter.most_common</code>
         </div>
-        <div style={card}>
+        <div style={estilos.cardStandard}>
           <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
             {keywords.map((k) => (
-              <span key={k.palabra} style={{ backgroundColor: '#f1f5f9', border: '1px solid #e2e8f0', padding: '0.25rem 0.65rem', borderRadius: '4px', fontSize: '0.82rem' }}>
-                {k.palabra} <strong>({k.frecuencia})</strong>
+              <span key={k.palabra} style={estilos.keywordTag}>
+                {k.palabra} <strong style={{ color: '#1e293b' }}>({k.frecuencia})</strong>
               </span>
             ))}
           </div>
         </div>
       </section>
-
-      {/* 3. Reto Final */}
-      <section>
-        <h3 style={{ ...sectionTitle, marginBottom: '0.75rem' }}>3. Reto Final — Registro y Filtrado por Fecha</h3>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem' }}>
-          {/* Formulario */}
-          <div style={card}>
-            <p style={cardLabel}>Registrar nueva atencion</p>
-            <form onSubmit={guardar} style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
-              <input type="text"   placeholder="Nombre del cliente" value={cliente} onChange={(e) => setCliente(e.target.value)} style={input} required />
-              <input type="number" placeholder="Tiempo (minutos)"   value={tiempo}  onChange={(e) => setTiempo(Number(e.target.value))} min={1} max={120} style={input} required />
-              <textarea rows={2}   placeholder="Comentario..."       value={texto}   onChange={(e) => setTexto(e.target.value)} style={{ ...input, resize: 'vertical' }} required />
-              <button type="submit" style={btnDark}>Guardar registro</button>
-            </form>
-          </div>
-
-          {/* Tabla */}
-          <div style={card}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem', flexWrap: 'wrap', gap: '0.5rem' }}>
-              <p style={cardLabel}>Atenciones registradas</p>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <label style={{ fontSize: '0.78rem', color: '#64748b' }}>Fecha:</label>
-                <input type="date" value={fechaFiltro} onChange={(e) => setFechaFiltro(e.target.value)} style={{ ...input, width: 'auto', padding: '0.25rem 0.4rem' }} />
-                {fechaFiltro && <button onClick={() => setFechaFiltro('')} style={{ background: 'none', border: 'none', color: '#0284c7', fontSize: '0.78rem', cursor: 'pointer' }}>Limpiar</button>}
-              </div>
-            </div>
-            <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem' }}>
-                <thead>
-                  <tr style={{ borderBottom: '1px solid #cbd5e1', color: '#64748b', textAlign: 'left' }}>
-                    <th style={th}>Cliente</th><th style={th}>Fecha</th><th style={th}>Tiempo</th><th style={th}>Comentario</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {comentarios.map((c) => (
-                    <tr key={c.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                      <td style={td}><strong>{c.cliente_nombre}</strong></td>
-                      <td style={{ ...td, color: '#64748b' }}>{c.fecha}</td>
-                      <td style={td}>{c.tiempo_atencion_minutos} min</td>
-                      <td style={{ ...td, color: '#334155' }}>{c.comentario}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 4. Modulos */}
-      <section>
-        <h3 style={{ ...sectionTitle, marginBottom: '0.75rem' }}>4. Modulos del Sistema</h3>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: '1rem' }}>
-          {MODULOS.map((m) => (
-            <Link key={m.to} to={m.to} style={{ textDecoration: 'none', ...card, display: 'block' }}>
-              <span style={{ fontWeight: 600, fontSize: '0.9rem', color: '#0f172a', display: 'block' }}>{m.title}</span>
-              <span style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '0.25rem', display: 'block' }}>{m.desc}</span>
-            </Link>
-          ))}
-        </div>
-      </section>
     </div>
   );
 }
 
-/* ── sub-componentes ── */
-function KpiCard({ label, value, code, sub }: { label: string; value: string; code?: string; sub?: string }) {
-  return (
-    <div style={card}>
-      <span style={{ fontSize: '0.78rem', color: '#64748b', display: 'block' }}>{label}</span>
-      <span style={{ fontSize: '1.6rem', fontWeight: 700, color: '#0f172a', display: 'block', margin: '0.25rem 0' }}>{value}</span>
-      {code && <code style={{ fontSize: '0.72rem', color: '#0284c7', fontFamily: 'monospace' }}>{code}</code>}
-      {sub  && <span style={{ fontSize: '0.72rem', color: '#059669', display: 'block', marginTop: '0.2rem' }}>{sub}</span>}
-    </div>
-  );
-}
+/* ── Estilos encapsulados en un Objeto JavaScript Completos ── */
 
-/* ── estilos ── */
-const card: React.CSSProperties  = { backgroundColor: '#fff', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '1rem', boxSizing: 'border-box' };
-const sectionTitle: React.CSSProperties = { fontSize: '1rem', fontWeight: 600, color: '#1e293b', margin: 0 };
-const badge: React.CSSProperties = { fontSize: '0.72rem', color: '#64748b', fontFamily: 'monospace', backgroundColor: '#f1f5f9', padding: '0.2rem 0.5rem', borderRadius: '4px' };
-const cardLabel: React.CSSProperties = { margin: '0 0 0.6rem 0', fontSize: '0.85rem', fontWeight: 600, color: '#1e293b' };
-const input: React.CSSProperties = { width: '100%', padding: '0.5rem', border: '1px solid #cbd5e1', borderRadius: '4px', fontSize: '0.85rem', boxSizing: 'border-box' };
-const btnDark: React.CSSProperties = { backgroundColor: '#0f172a', color: '#fff', border: 'none', padding: '0.5rem 1rem', borderRadius: '4px', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer' };
-const th: React.CSSProperties = { padding: '0.4rem', fontWeight: 600 };
-const td: React.CSSProperties = { padding: '0.4rem' };
+const estilos = {
+  dashboardWrapper: {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '2rem',
+    fontFamily: 'system-ui, sans-serif',
+    backgroundColor: '#f8fafc',
+    minHeight: '100vh',
+    paddingBottom: '2rem',
+    padding: '1rem',
+    paddingTop: '80px' // ← AÑADE ESTA LÍNEA (Ajusta los px según el alto de tu barra azul)
+  },
+
+  /* Cabecera Clásica Original */
+  cabeceraOriginal: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    flexWrap: 'wrap' as const,
+    gap: '1rem',
+    borderBottom: '1px solid #e2e8f0',
+    paddingBottom: '1.25rem'
+  },
+  cabeceraSubtitleOriginal: {
+    margin: 0,
+    fontSize: '0.75rem',
+    fontWeight: 600,
+    color: '#64748b',
+    textTransform: 'uppercase' as const,
+    letterSpacing: '0.05em'
+  },
+  cabeceraTitleOriginal: {
+    margin: '0.2rem 0 0.25rem',
+    fontSize: '1.5rem',
+    fontWeight: 700,
+    color: '#0f172a'
+  },
+  cabeceraDescOriginal: {
+    margin: 0,
+    fontSize: '0.85rem',
+    color: '#64748b'
+  },
+  btnDark: {
+    backgroundColor: '#0c296d',
+    color: '#ffffff',
+    padding: '0.4rem 0.9rem',
+    borderRadius: '4px',
+    border: 'none',
+    fontSize: '0.85rem',
+    fontWeight: 500,
+    cursor: 'pointer'
+  },
+  /* Sección e Indicadores SciPy */
+  sectionHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: '1rem'
+  },
+  sectionTitle: {
+    margin: 0,
+    fontSize: '1.1rem',
+    fontWeight: 700,
+    color: '#334155'
+  },
+  badge: {
+    backgroundColor: '#ffffff',
+    color: '#64748b',
+    padding: '0.2rem 0.5rem',
+    borderRadius: '4px',
+    fontSize: '0.8rem',
+    border: '1px solid #e2e8f0'
+  },
+  kpiRowTop: {
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr',
+    gap: '1.5rem',
+    marginBottom: '1.5rem'
+  },
+  kpiCardGranel: {
+    backgroundColor: '#ffffff',
+    borderRadius: '12px',
+    padding: '1.5rem 2rem',
+    border: '1px solid #e2e8f0',
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)'
+  },
+  kpiTextContainer: {
+    display: 'flex',
+    alignItems: 'center'
+  },
+  kpiLabelBig: {
+    margin: 0,
+    fontSize: '1.3rem',
+    fontWeight: 800,
+    color: '#0f172a',
+    maxWidth: '120px',
+    lineHeight: '1.2'
+  },
+  kpiNumberContainer: {
+    display: 'flex',
+    alignItems: 'baseline',
+    gap: '0.25rem'
+  },
+  kpiValueBig: {
+    fontSize: '2.5rem',
+    fontWeight: 800,
+    color: '#206e9b'
+  },
+  kpiUnitBig: {
+    fontSize: '1.2rem',
+    fontWeight: 700,
+    color: '#0f172a'
+  },
+  /* Bloques de Gráficos Inferiores */
+  chartsGrid: {
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr',
+    gap: '1.5rem'
+  },
+  chartCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: '12px',
+    padding: '1.25rem',
+    border: '1px solid #e2e8f0'
+  },
+  chartCardLabel: {
+    margin: '0 0 1rem 0',
+    fontSize: '0.85rem',
+    fontWeight: 600,
+    color: '#64748b'
+  },
+  /* Sección NLTK */
+  cardStandard: {
+    backgroundColor: '#ffffff',
+    border: '1px solid #e2e8f0',
+    borderRadius: '8px',
+    padding: '1.25rem'
+  },
+  keywordTag: {
+    backgroundColor: '#f1f5f9',
+    border: '1px solid #e2e8f0',
+    padding: '0.35rem 0.75rem',
+    borderRadius: '6px',
+    fontSize: '0.82rem',
+    color: '#475569'
+  }
+};

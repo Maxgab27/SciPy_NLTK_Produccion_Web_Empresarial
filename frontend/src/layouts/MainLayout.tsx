@@ -2,13 +2,13 @@ import React from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
 
 const nav = [
-  { to: '/dashboard',    label: 'Dashboard'     },
-  { to: '/metricas',     label: 'Metricas'      },
-  { to: '/optimizacion', label: 'Optimizacion'  },
-  { to: '/comentarios',  label: 'Comentarios'   },
-  { to: '/analisis-nlp', label: 'Analisis NLP'  },
-  { to: '/clientes',     label: 'Clientes'      },
-  { to: '/reportes',     label: 'Reportes'      },
+  { to: '/dashboard', label: 'Dashboard' },
+  { to: '/metricas', label: 'Metricas' },
+  { to: '/optimizacion', label: 'Optimizacion' },
+  { to: '/comentarios', label: 'Comentarios' },
+  { to: '/analisis-nlp', label: 'Analisis NLP' },
+  { to: '/clientes', label: 'Clientes' },
+  { to: '/reportes', label: 'Reportes' },
 ];
 
 export default function MainLayout() {
@@ -37,6 +37,10 @@ export default function MainLayout() {
               </NavLink>
             ))}
           </nav>
+          <main style={{ maxWidth: '1200px', margin: '0 auto', padding: '3.5rem 1.5rem 2rem 1.5rem' }}>
+            <Outlet />
+          </main>
+
         </div>
       </header>
 
