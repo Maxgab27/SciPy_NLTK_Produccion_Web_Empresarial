@@ -1,3 +1,4 @@
+import { requestJson } from '../services/http';
 import React, { useState, useEffect } from 'react';
 
 interface Keyword    { palabra: string; frecuencia: number; }
@@ -11,10 +12,6 @@ const DEMO_KW: Keyword[] = [
   { palabra: 'excelente',  frecuencia: 4  },
   { palabra: 'demora',     frecuencia: 3  },
 ];
-const DEMO_COM: Comentario[] = [
-  { id: '1', cliente_nombre: 'Carlos Mendoza', fecha: '2026-09-01', tiempo_atencion_minutos: 15, comentario: 'El servicio fue rapido y el equipo brindo una excelente atencion.' },
-  { id: '2', cliente_nombre: 'Mariana Silva',  fecha: '2026-09-01', tiempo_atencion_minutos: 25, comentario: 'Demora en la entrega del informe de soporte.' },
-];
 
 export default function Comentarios() {
   const [keywords,    setKeywords]    = useState<Keyword[]>([]);
@@ -27,20 +24,27 @@ export default function Comentarios() {
   const [tiempo,  setTiempo]  = useState(15);
   const [texto,   setTexto]   = useState('');
 
+  const [guardando, setGuardando] = useState(false);
+  const [errorGuardado, setErrorGuardado] = useState('');
+
+  const [errorCarga, setErrorCarga] = useState('');
+
   const cargar = async () => {
+    setErrorCarga('');
     try {
       const [rK, rC] = await Promise.all([
         fetch('/api/comentarios/keywords'),
         fetch(fechaFiltro ? `/api/comentarios?fecha=${fechaFiltro}` : '/api/comentarios'),
       ]);
-      if (!rK.ok) throw new Error('offline');
+      if (!rK.ok || !rC.ok) throw new Error('offline');
       const kd = await rK.json(); setKeywords(kd.keywords ?? []);
       setComentarios(await rC.json());
       setOnline(true);
     } catch {
       setOnline(false);
+      setErrorCarga('No se pudo cargar el historial. Comprueba la conexión y vuelve a actualizar.');
       setKeywords(DEMO_KW);
-      setComentarios(DEMO_COM);
+      setComentarios([]);
     }
   };
 
@@ -48,25 +52,31 @@ export default function Comentarios() {
 
   const guardar = async (e: React.FormEvent) => {
     e.preventDefault();
-    const nuevo: Comentario = {
-      id: String(Date.now()),
-      cliente_nombre: cliente,
-      fecha: new Date().toISOString().split('T')[0],
-      tiempo_atencion_minutos: tiempo,
-      comentario: texto,
-    };
-    try {
-      await fetch('/api/comentarios', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(nuevo) });
-    } catch {
-      setComentarios((prev) => [nuevo, ...prev]);
+    if (guardando) return;
+    setErrorGuardado('');
+    if (!cliente.trim() || !texto.trim() || !Number.isFinite(tiempo) || tiempo <= 0) {
+      setErrorGuardado('Completa el cliente, el comentario y un tiempo mayor que cero.');
+      return;
     }
-    setCliente(''); setTexto(''); setTiempo(15);
-    cargar();
+    setGuardando(true);
+    const ahora = new Date();
+    const fecha = `${ahora.getFullYear()}-${String(ahora.getMonth() + 1).padStart(2, '0')}-${String(ahora.getDate()).padStart(2, '0')}`;
+    try {
+      await requestJson('/api/comentarios', { method: 'POST', body: JSON.stringify({
+        cliente_nombre: cliente.trim(), fecha, tiempo_atencion_minutos: tiempo, comentario: texto.trim(),
+      }) });
+      setCliente(''); setTexto(''); setTiempo(15);
+      await cargar();
+    } catch {
+      setErrorGuardado('No se pudo confirmar el guardado. Conservamos los datos; comprueba el historial antes de reintentar.');
+    } finally {
+      setGuardando(false);
+    }
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-      <header style={pageHeader}>
+    <div className="page-shell" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+      <header className="page-header" style={pageHeader}>
         <div>
           <h2 style={h2}>Comentarios de Clientes</h2>
           <p style={sub}>Ejercicio 4: analisis de frecuencia con NLTK · Reto Final: registro y filtrado por fecha</p>
@@ -76,6 +86,8 @@ export default function Comentarios() {
         </span>
       </header>
 
+      {errorCarga && <p role="alert">{errorCarga}</p>}
+      <p role="note">Las palabras frecuentes son ejemplos; aún no analizan el historial. Los registros confirmados se guardan en PostgreSQL.</p>
       {/* Palabras clave — Ejercicio 4 */}
       <section>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
@@ -104,7 +116,8 @@ export default function Comentarios() {
             <input type="text"   placeholder="Nombre del cliente"  value={cliente} onChange={(e) => setCliente(e.target.value)} style={input} required />
             <input type="number" placeholder="Tiempo de atencion"  value={tiempo}  onChange={(e) => setTiempo(Number(e.target.value))} min={1} max={120} style={input} required />
             <textarea rows={3}   placeholder="Texto del comentario..." value={texto} onChange={(e) => setTexto(e.target.value)} style={{ ...input, resize: 'vertical' }} required />
-            <button type="submit" style={btnDark}>Guardar</button>
+            <button type="submit" style={btnDark} disabled={guardando}>{guardando ? 'Guardando...' : 'Guardar'}</button>
+            {errorGuardado && <p role="alert">{errorGuardado}</p>}
           </form>
         </div>
 

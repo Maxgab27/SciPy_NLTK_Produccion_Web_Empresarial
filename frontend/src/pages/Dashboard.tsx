@@ -1,14 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import type { MetricasAtencion as Metricas } from '../types';
+import { requestJson } from '../services/http';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 
 /* ── tipos locales ── */
-interface Metricas {
-  media: number;
-  desviacion_estandar: number;
-  mediana: number;
-  coeficiente_variacion?: number;
-  interpretacion?: string;
-}
 interface Keyword { palabra: string; frecuencia: number; }
 interface Comentario {
   id: string;
@@ -19,13 +14,6 @@ interface Comentario {
 }
 
 /* ── datos de demostración ── */
-const DEMO_METRICAS: Metricas = { media: 17.2, desviacion_estandar: 4.29, mediana: 17.5, coeficiente_variacion: 24.94, interpretacion: 'Variabilidad moderada' };
-const DEMO_KEYWORDS: Keyword[] = [{ palabra: 'servicio', frecuencia: 12 }, { palabra: 'atencion', frecuencia: 9 }, { palabra: 'rapido', frecuencia: 7 }, { palabra: 'soporte', frecuencia: 5 }];
-const DEMO_COMENTARIOS: Comentario[] = [
-  { id: '1', cliente_nombre: 'Carlos Mendoza', fecha: '2026-09-01', tiempo_atencion_minutos: 15, comentario: 'Excelente atencion y soporte rapido.' },
-  { id: '2', cliente_nombre: 'Mariana Silva',  fecha: '2026-09-01', tiempo_atencion_minutos: 25, comentario: 'Demora en la entrega del informe.' },
-];
-
 const MODULOS = [
   { to: '/metricas',     title: 'Metricas SciPy',  desc: 'Estadistica e Interpolacion — Ejercicios 1 y 3' },
   { to: '/optimizacion', title: 'Optimizacion',     desc: 'Minimizacion de costos — Ejercicio 2' },
@@ -47,23 +35,29 @@ export default function Dashboard() {
 
   const BASE = '/api';   // Vite proxy -> http://localhost:8000
 
+  const [guardando, setGuardando] = useState(false);
+  const [errorGuardado, setErrorGuardado] = useState('');
+
+  const [errorCarga, setErrorCarga] = useState('');
+
+  const cargaId = useRef(0);
   const cargar = async () => {
+    const id = ++cargaId.current;
+    setMetricas(null); setOnline(null);
+    setErrorCarga('');
     try {
-      const [rM, rK, rC] = await Promise.all([
-        fetch(`${BASE}/metricas-atencion`),
-        fetch(`${BASE}/comentarios/keywords`),
-        fetch(fechaFiltro ? `${BASE}/comentarios?fecha=${fechaFiltro}` : `${BASE}/comentarios`),
+      const [m, k, c] = await Promise.all([
+        requestJson<Metricas>(`${BASE}/metricas-atencion${fechaFiltro ? `?fecha=${fechaFiltro}` : ''}`),
+        requestJson<{ keywords: Keyword[] }>(`${BASE}/comentarios/keywords`).catch(() => ({ keywords: [] })),
+        requestJson<Comentario[]>(fechaFiltro ? `${BASE}/comentarios?fecha=${fechaFiltro}` : `${BASE}/comentarios`),
       ]);
-      if (!rM.ok) throw new Error('offline');
-      setMetricas(await rM.json());
-      const kd = await rK.json(); setKeywords(kd.keywords ?? []);
-      setComentarios(await rC.json());
-      setOnline(true);
+      if (id !== cargaId.current) return;
+      setMetricas(m); setKeywords(k.keywords); setComentarios(c); setOnline(true);
     } catch {
+      if (id !== cargaId.current) return;
       setOnline(false);
-      setMetricas(DEMO_METRICAS);
-      setKeywords(DEMO_KEYWORDS);
-      setComentarios(DEMO_COMENTARIOS);
+      setErrorCarga('No se pudieron cargar los datos. Comprueba la conexión y vuelve a actualizar.');
+      setMetricas(null); setKeywords([]); setComentarios([]);
     }
   };
 
@@ -71,18 +65,30 @@ export default function Dashboard() {
 
   const guardar = async (e: React.FormEvent) => {
     e.preventDefault();
-    const nuevo: Comentario = { id: String(Date.now()), cliente_nombre: cliente, fecha: new Date().toISOString().split('T')[0], tiempo_atencion_minutos: tiempo, comentario: texto };
-    try {
-      await fetch(`${BASE}/comentarios`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(nuevo) });
-    } catch {
-      setComentarios((prev) => [nuevo, ...prev]);
+    if (guardando) return;
+    setErrorGuardado('');
+    if (!cliente.trim() || !texto.trim() || !Number.isFinite(tiempo) || tiempo <= 0) {
+      setErrorGuardado('Completa el cliente, el comentario y un tiempo mayor que cero.');
+      return;
     }
-    setCliente(''); setTexto(''); setTiempo(15);
-    cargar();
+    setGuardando(true);
+    const ahora = new Date();
+    const fecha = `${ahora.getFullYear()}-${String(ahora.getMonth() + 1).padStart(2, '0')}-${String(ahora.getDate()).padStart(2, '0')}`;
+    try {
+      await requestJson('/api/comentarios', { method: 'POST', body: JSON.stringify({
+        cliente_nombre: cliente.trim(), fecha, tiempo_atencion_minutos: tiempo, comentario: texto.trim(),
+      }) });
+      setCliente(''); setTexto(''); setTiempo(15);
+      await cargar();
+    } catch {
+      setErrorGuardado('No se pudo confirmar el guardado. Conservamos los datos; comprueba el historial antes de reintentar.');
+    } finally {
+      setGuardando(false);
+    }
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+    <div className="page-shell dashboard-content" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
 
       {/* Cabecera */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem', borderBottom: '1px solid #e2e8f0', paddingBottom: '1.25rem' }}>
@@ -93,11 +99,23 @@ export default function Dashboard() {
         </div>
         <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
           <span style={{ fontSize: '0.78rem', padding: '0.3rem 0.7rem', borderRadius: '4px', border: '1px solid #e2e8f0', backgroundColor: online ? '#f0fdf4' : '#f8fafc', color: online ? '#166534' : '#475569', fontWeight: 500 }}>
-            {online === null ? 'Conectando...' : online ? 'Backend Activo (:8000)' : 'Modo Demostracion'}
+            {online === null ? 'Conectando...' : online ? 'Backend Activo (:8000)' : 'Sin conexión'}
           </span>
           <button onClick={cargar} style={btnDark}>Actualizar</button>
         </div>
       </div>
+
+      {errorCarga && <p role="alert">{errorCarga}</p>}
+      <p role="note">Las métricas usan atenciones guardadas y el filtro de fecha del historial. Los gráficos superiores y palabras frecuentes siguen siendo ejemplos; su integración está pendiente.</p>
+      <section className="chart-grid">
+        <div className="panel"><div className="panel-title"><h4>Atenciones por periodo</h4><span>Semanal ▾</span></div>
+          <div className="bar-chart">{[42,68,51,83,61,74,48,65,57,78].map((v,i)=><div className="bar-group" key={i}><div className="bar primary" style={{height:`${v}%`,animationDelay:`${i*60}ms`}}/><div className="bar accent" style={{height:`${Math.max(18,v-28)}%`,animationDelay:`${i*60+80}ms`}}/><span className="bar-label">{['Lun','Mar','Mie','Jue','Vie','Sab','Dom','Lun','Mar','Mie'][i]}</span></div>)}</div>
+          <div className="legend"><span><i className="dot blue"/>Atenciones</span><span><i className="dot yellow"/>Resueltas</span></div>
+        </div>
+        <div className="panel"><div className="panel-title"><h4>Satisfaccion general</h4><span>Este mes</span></div><div className="donut-wrap"><div className="donut"/><div className="donut-note"><strong>Buen rendimiento</strong><span>La satisfaccion supera el objetivo mensual.</span></div></div></div>
+      </section>
+
+      <section className="bottom-grid"><div className="panel"><div className="panel-title"><h4>Tendencia de tiempos</h4><span>Media movil 7d</span></div><div className="area-chart"><svg viewBox="0 0 700 140" preserveAspectRatio="none"><path className="area-fill" d="M0 112 C55 105 65 55 120 70 S190 110 235 76 S292 23 345 73 S414 113 465 59 S525 26 574 62 S650 90 700 38 L700 140 L0 140Z" fill="rgba(255,181,62,.35)"/><path d="M0 112 C55 105 65 55 120 70 S190 110 235 76 S292 23 345 73 S414 113 465 59 S525 26 574 62 S650 90 700 38" fill="none" stroke="#173e63" strokeWidth="3" strokeLinecap="round"/></svg></div></div><div className="panel"><div className="panel-title"><h4>Terminos frecuentes</h4><span>NLTK · top 4</span></div><div className="keyword-list">{keywords.map(k=><span className="keyword" key={k.palabra}>{k.palabra} <b>{k.frecuencia}</b></span>)}</div></div></section>
 
       {/* 1. Indicadores SciPy — Ejercicio 1 */}
       <section>
@@ -105,6 +123,8 @@ export default function Dashboard() {
           <h3 style={sectionTitle}>1. Indicadores de Tiempos de Atencion — SciPy</h3>
           <code style={badge}>scipy.stats</code>
         </div>
+        <p>{metricas ? `${metricas.total_registros} atenciones · ${fechaFiltro || 'Todo el historial'}` : 'Sin métricas disponibles'}</p>
+        <p>{metricas?.interpretacion}</p>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
           <KpiCard label="Tiempo Promedio"       value={`${metricas?.media ?? '-'} min`}           code="np.mean(tiempos)" />
           <KpiCard label="Desviacion Estandar"   value={`±${metricas?.desviacion_estandar ?? '-'} min`} code="np.std(ddof=1)" />
@@ -141,8 +161,9 @@ export default function Dashboard() {
               <input type="text"   placeholder="Nombre del cliente" value={cliente} onChange={(e) => setCliente(e.target.value)} style={input} required />
               <input type="number" placeholder="Tiempo (minutos)"   value={tiempo}  onChange={(e) => setTiempo(Number(e.target.value))} min={1} max={120} style={input} required />
               <textarea rows={2}   placeholder="Comentario..."       value={texto}   onChange={(e) => setTexto(e.target.value)} style={{ ...input, resize: 'vertical' }} required />
-              <button type="submit" style={btnDark}>Guardar registro</button>
-            </form>
+              <button type="submit" style={btnDark} disabled={guardando}>{guardando ? 'Guardando...' : 'Guardar registro'}</button>
+              {errorGuardado && <p role="alert">{errorGuardado}</p>}
+          </form>
           </div>
 
           {/* Tabla */}

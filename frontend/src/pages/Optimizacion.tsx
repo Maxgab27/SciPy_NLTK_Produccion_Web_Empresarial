@@ -5,6 +5,7 @@ interface ResultadoOpt {
   recurso_b: number;
   costo_optimo: number;
   costo_inicial?: number;
+  exito: boolean;
 }
 
 export default function Optimizacion() {
@@ -14,9 +15,11 @@ export default function Optimizacion() {
   const [resultado, setResultado] = useState<ResultadoOpt | null>(null);
   const [cargando,  setCargando]  = useState(false);
 
+  const [error, setError] = useState('');
+
   const calcular = async (e: React.FormEvent) => {
     e.preventDefault();
-    setCargando(true);
+    setCargando(true); setResultado(null); setError('');
     try {
       const r = await fetch('/api/optimizacion', {
         method: 'POST',
@@ -24,27 +27,26 @@ export default function Optimizacion() {
         body: JSON.stringify({ capacidad_minima: capacidad, costo_base_a: costoA, costo_base_b: costoB }),
       });
       if (!r.ok) throw new Error('offline');
-      setResultado(await r.json());
+      const data: ResultadoOpt = await r.json();
+      if (!data.exito) throw new Error('Sin solución válida');
+      setResultado(data);
     } catch {
-      // Calculo local de demostración
-      const a = Math.max(0, (capacidad - 5 * 4) / 10);
-      const b = Math.max(0, (capacidad - 10 * a) / 5);
-      const costo = costoA * a + costoB * b + 10 * (a - 3) ** 2;
-      setResultado({ recurso_a: parseFloat(a.toFixed(2)), recurso_b: parseFloat(b.toFixed(2)), costo_optimo: parseFloat(costo.toFixed(2)), costo_inicial: costoA * 2 + costoB * 4 });
+      setError('No se obtuvo una optimización válida. Revisa los parámetros y la conexión.');
     } finally {
       setCargando(false);
     }
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-      <header style={pageHeader}>
+    <div className="page-shell" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+      <header className="page-header" style={pageHeader}>
         <div>
           <h2 style={h2}>Optimizacion de Recursos — SciPy</h2>
           <p style={sub}>Ejercicio 2: minimizacion de funcion de costo con restriccion de capacidad</p>
         </div>
       </header>
 
+      {error && <p role="alert">{error}</p>}
       {/* Contexto */}
       <div style={card}>
         <h3 style={sectionH3}>Situacion del Ejercicio</h3>

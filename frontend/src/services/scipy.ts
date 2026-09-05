@@ -3,23 +3,9 @@ import { MetricasAtencion, OptimizacionInput, OptimizacionResult, InterpolacionR
 
 // Ejercicio 1: Estadística de tiempos de atención con SciPy
 export async function getMetricasAtencion(tiemposPersonalizados?: number[]) {
-  const fallback: MetricasAtencion = {
-    tiempos: tiemposPersonalizados || [12, 15, 18, 20, 11, 25, 19, 17, 14, 21],
-    total_registros: 10,
-    media: 17.2,
-    desviacion_estandar: 4.29,
-    mediana: 17.5,
-    varianza: 18.4,
-    coeficiente_variacion: 24.94,
-    interpretacion: 'Variabilidad moderada en los tiempos de atención (SciPy stats)',
-  };
-
-  const endpoint = tiemposPersonalizados ? '/metricas-atencion' : '/metricas-atencion';
-  const options: RequestInit = tiemposPersonalizados
+  return apiRequest<MetricasAtencion>('/metricas-atencion', tiemposPersonalizados
     ? { method: 'POST', body: JSON.stringify({ tiempos: tiemposPersonalizados }) }
-    : { method: 'GET' };
-
-  return apiRequest<MetricasAtencion>(endpoint, options, fallback);
+    : { method: 'GET' });
 }
 
 // Ejercicio 2: Optimización de recursos con scipy.optimize.minimize

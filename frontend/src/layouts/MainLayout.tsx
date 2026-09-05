@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
 
 const nav = [
@@ -11,42 +11,46 @@ const nav = [
   { to: '/reportes',     label: 'Reportes'      },
 ];
 
+const themes = [
+  { id: 'eucalyptus', name: 'Eucalyptus Blue', swatches: ['#dbe4c7', '#a6b9ad', '#6f9098', '#3f6673', '#193d4a'] },
+  { id: 'dusty', name: 'Dusty Petrol', swatches: ['#403837', '#707979', '#a7a69d', '#f2e7c5', '#5b3b2e'] },
+  { id: 'quiet', name: 'Quiet Cry', swatches: ['#171b20', '#303a48', '#4e6f9e', '#8ac8cc', '#eef0fa'] },
+] as const;
+
 export default function MainLayout() {
+  const [theme, setTheme] = useState<(typeof themes)[number]['id']>('eucalyptus');
+  const themeIndex = themes.findIndex((item) => item.id === theme);
+  const nextTheme = themes[(themeIndex + 1) % themes.length];
+
   return (
-    <div style={{ fontFamily: 'system-ui, sans-serif', minHeight: '100vh', backgroundColor: '#f8fafc' }}>
-      <header style={{ backgroundColor: '#0f172a', color: '#ffffff', padding: '0 2rem' }}>
-        <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '52px' }}>
-          <span style={{ fontWeight: 700, fontSize: '1rem', letterSpacing: '0.02em' }}>
-            Centro Inteligente de Atencion
-          </span>
-          <nav style={{ display: 'flex', gap: '1.5rem' }}>
+    <div className={`app-shell theme-${theme}`}>
+      <aside className="sidebar">
+        <div className="brand"><div className="brand-mark">CI</div><div className="brand-copy"><div className="brand-name">Centro IA</div><div className="brand-sub">Atención empresarial</div></div></div>
+        <div className="profile"><div className="profile-avatar">◉</div><strong>Panel ejecutivo</strong><span>operaciones@empresa.com</span></div>
+          <nav className="nav" aria-label="Navegación principal">
             {nav.map((item) => (
               <NavLink
                 key={item.to}
                 to={item.to}
-                style={({ isActive }) => ({
-                  color: isActive ? '#ffffff' : '#94a3b8',
-                  textDecoration: 'none',
-                  fontSize: '0.85rem',
-                  fontWeight: isActive ? 600 : 400,
-                  borderBottom: isActive ? '2px solid #ffffff' : '2px solid transparent',
-                  paddingBottom: '2px',
-                })}
+                className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`}
               >
-                {item.label}
+                <span className="nav-icon">{['⌂','◈','↗','✦','◌','♙','▤'][nav.indexOf(item)]}</span><span className="nav-label">{item.label}</span>
               </NavLink>
             ))}
           </nav>
+      </aside>
+      <main className="main-area">
+        <div className="theme-switcher" role="group" aria-label="Selector de tema de color">
+          <span className="theme-switcher-label">Tema</span>
+          <div className="theme-swatches" aria-hidden="true">
+            {themes[themeIndex].swatches.slice(0, 4).map((color) => <i key={color} style={{ backgroundColor: color }} />)}
+          </div>
+          <button type="button" className="theme-button" onClick={() => setTheme(nextTheme.id)} aria-label={`Cambiar al tema ${nextTheme.name}`}>
+            <span>{themes[themeIndex].name}</span><b>↻</b>
+          </button>
         </div>
-      </header>
-
-      <main style={{ maxWidth: '1200px', margin: '0 auto', padding: '2rem 1.5rem' }}>
         <Outlet />
       </main>
-
-      <footer style={{ borderTop: '1px solid #e2e8f0', padding: '1rem 2rem', textAlign: 'center', fontSize: '0.75rem', color: '#94a3b8', marginTop: '3rem' }}>
-        SciPy + NLTK — Produccion Web Empresarial
-      </footer>
     </div>
   );
 }

@@ -1,14 +1,8 @@
+import { requestJson } from '../services/http';
+import type { ServicioItem } from '../types';
 import React, { useState } from 'react';
 
 interface ClasifResult { categoria: string; confianza: number; }
-interface BusquedaResult { servicio: string; relevancia: string; }
-
-const DEMO_SERVICIOS: BusquedaResult[] = [
-  { servicio: 'Soporte Tecnico',     relevancia: 'Alta'  },
-  { servicio: 'Instalacion',         relevancia: 'Media' },
-  { servicio: 'Mantenimiento',       relevancia: 'Media' },
-];
-
 export default function AnalisisNLP() {
   // Ejercicio 5 — Clasificador
   const [mensaje,   setMensaje]   = useState('');
@@ -17,23 +11,23 @@ export default function AnalisisNLP() {
 
   // Ejercicio 6 — Buscador
   const [consulta,  setConsulta]  = useState('');
-  const [resultados, setResultados] = useState<BusquedaResult[]>([]);
+  const [resultados, setResultados] = useState<ServicioItem[]>([]);
   const [cargBusq,  setCargBusq]  = useState(false);
+
+  const [errorClasif, setErrorClasif] = useState('');
+  const [errorBusq, setErrorBusq] = useState('');
+  const [buscado, setBuscado] = useState(false);
+  const [mensajeAnalizado, setMensajeAnalizado] = useState('');
 
   const clasificar = async (e: React.FormEvent) => {
     e.preventDefault();
-    setCargClasif(true);
+    setCargClasif(true); setClasif(null); setErrorClasif('');
     try {
       const r = await fetch('/api/nltk/clasificar', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ mensaje }) });
       if (!r.ok) throw new Error('offline');
-      setClasif(await r.json());
+      setClasif(await r.json()); setMensajeAnalizado(mensaje);
     } catch {
-      // Clasificacion local
-      const m = mensaje.toLowerCase();
-      const cat = m.includes('reclamo') || m.includes('demora') || m.includes('mal') ? 'reclamo'
-                : m.includes('precio') || m.includes('comprar') || m.includes('cotizacion') ? 'ventas'
-                : 'soporte';
-      setClasif({ categoria: cat, confianza: 0.88 });
+      setErrorClasif('No se pudo clasificar el mensaje. Inténtalo de nuevo.');
     } finally {
       setCargClasif(false);
     }
@@ -41,13 +35,12 @@ export default function AnalisisNLP() {
 
   const buscar = async (e: React.FormEvent) => {
     e.preventDefault();
-    setCargBusq(true);
+    setCargBusq(true); setResultados([]); setErrorBusq(''); setBuscado(false);
     try {
-      const r = await fetch(`/api/nltk/buscar?q=${encodeURIComponent(consulta)}`);
-      if (!r.ok) throw new Error('offline');
-      setResultados(await r.json());
+      setResultados(await requestJson<ServicioItem[]>(`/api/nltk/buscar?q=${encodeURIComponent(consulta)}`));
+      setBuscado(true);
     } catch {
-      setResultados(DEMO_SERVICIOS);
+      setErrorBusq('No se pudo consultar los servicios. Inténtalo de nuevo.');
     } finally {
       setCargBusq(false);
     }
@@ -57,14 +50,15 @@ export default function AnalisisNLP() {
   const categoriaBg:    Record<string, string> = { ventas: '#eff6ff', soporte: '#f0f9ff', reclamo: '#fef2f2' };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-      <header style={pageHeader}>
+    <div className="page-shell" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+      <header className="page-header" style={pageHeader}>
         <div>
           <h2 style={h2}>Analisis de Lenguaje Natural — NLTK</h2>
           <p style={sub}>Ejercicio 5: clasificacion de mensajes · Ejercicio 6: buscador inteligente de servicios</p>
         </div>
       </header>
 
+      <p role="note">Clasificación provisional por reglas. El porcentaje mostrado es fijo y no representa la probabilidad de un modelo entrenado. La búsqueda usa un catálogo de ejemplo.</p>
       {/* Ejercicio 5 — Clasificador */}
       <section>
         <SectionTitle title="Ejercicio 5 — Clasificador de Mensajes" badge="NLTK Classifier" />
@@ -84,6 +78,7 @@ export default function AnalisisNLP() {
             </form>
           </div>
 
+          {errorClasif && <p role="alert">{errorClasif}</p>}
           {clasif && (
             <div style={card}>
               <h3 style={sH3}>Resultado de la Clasificacion</h3>
@@ -96,7 +91,7 @@ export default function AnalisisNLP() {
                 </p>
               </div>
               <div style={{ backgroundColor: '#f8fafc', borderRadius: '4px', padding: '0.6rem 0.8rem', fontSize: '0.78rem', color: '#475569', fontFamily: 'monospace' }}>
-                Mensaje analizado: "{mensaje.slice(0, 60)}{mensaje.length > 60 ? '...' : ''}"
+                Mensaje analizado: "{mensajeAnalizado.slice(0, 60)}{mensajeAnalizado.length > 60 ? '...' : ''}"
               </div>
             </div>
           )}
@@ -116,6 +111,8 @@ export default function AnalisisNLP() {
               {cargBusq ? 'Buscando...' : 'Buscar Servicio'}
             </button>
           </form>
+          {errorBusq && <p role="alert">{errorBusq}</p>}
+          {buscado && resultados.length === 0 && <p>No se encontraron servicios.</p>}
           {resultados.length > 0 && (
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
               <thead>
@@ -127,10 +124,10 @@ export default function AnalisisNLP() {
               <tbody>
                 {resultados.map((r, i) => (
                   <tr key={i} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                    <td style={td}><strong>{r.servicio}</strong></td>
+                    <td style={td}><strong>{r.nombre}</strong></td>
                     <td style={td}>
-                      <span style={{ fontSize: '0.75rem', padding: '0.15rem 0.5rem', borderRadius: '3px', backgroundColor: r.relevancia === 'Alta' ? '#f0fdf4' : '#f8fafc', color: r.relevancia === 'Alta' ? '#166534' : '#475569', border: '1px solid', borderColor: r.relevancia === 'Alta' ? '#bbf7d0' : '#e2e8f0' }}>
-                        {r.relevancia}
+                      <span style={{ fontSize: '0.75rem', padding: '0.15rem 0.5rem', borderRadius: '3px', backgroundColor: (r.coincidencia ?? 0) >= 3 ? '#f0fdf4' : '#f8fafc', color: (r.coincidencia ?? 0) >= 3 ? '#166534' : '#475569', border: '1px solid', borderColor: (r.coincidencia ?? 0) >= 3 ? '#bbf7d0' : '#e2e8f0' }}>
+                        {r.coincidencia === undefined ? 'Sugerencia del catálogo' : `${r.coincidencia} puntos`}
                       </span>
                     </td>
                   </tr>

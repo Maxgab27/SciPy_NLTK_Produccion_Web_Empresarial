@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { requestJson } from '../services/http';
 
 interface Cliente {
   id: string;
@@ -10,30 +11,38 @@ interface Cliente {
   total_atenciones: number;
 }
 
-const CLIENTES: Cliente[] = [
-  { id: '1', nombre: 'Carlos Mendoza',  empresa: 'Inversiones Norte SAC', correo: 'cmendoza@norte.pe',  telefono: '987-654-321', tiempo_promedio_min: 15, total_atenciones: 8  },
-  { id: '2', nombre: 'Mariana Silva',   empresa: 'Consultora Silva E.I.R.L', correo: 'msilva@csv.pe',    telefono: '976-543-210', tiempo_promedio_min: 25, total_atenciones: 5  },
-  { id: '3', nombre: 'Roberto Paredes', empresa: 'Distribuidora Paredes',    correo: 'rparedes@dist.pe', telefono: '965-432-109', tiempo_promedio_min: 18, total_atenciones: 12 },
-  { id: '4', nombre: 'Ana Torres',      empresa: 'Grupo Torres SAA',         correo: 'atorres@gt.pe',    telefono: '954-321-098', tiempo_promedio_min: 11, total_atenciones: 3  },
-];
-
 export default function Clientes() {
-  const promedio = (CLIENTES.reduce((s, c) => s + c.tiempo_promedio_min, 0) / CLIENTES.length).toFixed(1);
+  const [clientes, setClientes] = useState<Cliente[]>([]);
+  const [error, setError] = useState('');
+  const [cargando, setCargando] = useState(true);
+  const cargar = async () => {
+    setCargando(true); setError('');
+    try { setClientes(await requestJson<Cliente[]>('/api/clientes')); }
+    catch { setClientes([]); setError('No se pudo cargar el directorio de clientes.'); }
+    finally { setCargando(false); }
+  };
+  useEffect(() => { cargar(); }, []);
+  const total = clientes.reduce((sum, c) => sum + c.total_atenciones, 0);
+  const promedio = total ? (clientes.reduce((sum, c) => sum + c.tiempo_promedio_min * c.total_atenciones, 0) / total).toFixed(1) : '0.0';
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-      <header style={pageHeader}>
+    <div className="page-shell" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+      <header className="page-header" style={pageHeader}>
         <div>
           <h2 style={h2}>Directorio de Clientes</h2>
           <p style={sub}>Tiempos de atencion promedio y conteo de atenciones por cliente</p>
         </div>
       </header>
 
+      <button onClick={cargar} disabled={cargando}>Actualizar clientes</button>
+      {cargando && <p role="status">Cargando clientes...</p>}
+      {error && <p role="alert">{error}</p>}
+      {!cargando && !error && clientes.length === 0 && <p>Aún no hay clientes. Registra una atención para crear el primero.</p>}
       {/* KPIs */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1rem' }}>
         <div style={kpiCard}>
           <span style={kpiLabel}>Total clientes</span>
-          <span style={kpiValue}>{CLIENTES.length}</span>
+          <span style={kpiValue}>{clientes.length}</span>
         </div>
         <div style={kpiCard}>
           <span style={kpiLabel}>Tiempo promedio global</span>
@@ -41,7 +50,7 @@ export default function Clientes() {
         </div>
         <div style={kpiCard}>
           <span style={kpiLabel}>Total atenciones</span>
-          <span style={kpiValue}>{CLIENTES.reduce((s, c) => s + c.total_atenciones, 0)}</span>
+          <span style={kpiValue}>{clientes.reduce((s, c) => s + c.total_atenciones, 0)}</span>
         </div>
       </div>
 
@@ -60,14 +69,14 @@ export default function Clientes() {
               </tr>
             </thead>
             <tbody>
-              {CLIENTES.map((c) => (
+              {clientes.map((c) => (
                 <tr key={c.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
                   <td style={td}><strong style={{ color: '#0f172a' }}>{c.nombre}</strong></td>
                   <td style={{ ...td, color: '#475569' }}>{c.empresa}</td>
                   <td style={{ ...td, color: '#64748b', fontFamily: 'monospace', fontSize: '0.78rem' }}>{c.correo}</td>
                   <td style={{ ...td, color: '#64748b' }}>{c.telefono}</td>
                   <td style={{ ...td, textAlign: 'center', fontWeight: 600, color: c.tiempo_promedio_min > 20 ? '#dc2626' : '#166534' }}>
-                    {c.tiempo_promedio_min} min
+                    {c.tiempo_promedio_min.toFixed(1)} min
                   </td>
                   <td style={{ ...td, textAlign: 'center' }}>{c.total_atenciones}</td>
                 </tr>

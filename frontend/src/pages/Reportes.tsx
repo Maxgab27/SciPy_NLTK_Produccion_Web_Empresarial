@@ -28,8 +28,8 @@ const PRACTICAS = [
 
 export default function Reportes() {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-      <header style={pageHeader}>
+    <div className="page-shell" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+      <header className="page-header" style={pageHeader}>
         <div>
           <h2 style={h2}>Reporte Ejecutivo Consolidado</h2>
           <p style={sub}>Proyecto integrador — Portal web empresarial inteligente (SENATI)</p>
