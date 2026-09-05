@@ -1,0 +1,29 @@
+from fastapi import APIRouter, Depends, HTTPException
+from app.database.connection import get_connection
+from app.database.models import ClienteNuevo
+
+router = APIRouter(prefix="/api/clientes", tags=["Clientes"])
+SELECT_CLIENTES = """SELECT c.id::text, c.nombre, c.empresa, c.correo, c.telefono,
+    count(t.id)::int AS total_atenciones,
+    coalesce(avg(t.tiempo_minutos), 0)::float8 AS tiempo_promedio_min
+    FROM clientes c LEFT JOIN tiempos_atencion t ON t.cliente_id = c.id"""
+
+
+@router.get("")
+def listar_clientes(db=Depends(get_connection)):
+    return db.execute(SELECT_CLIENTES + " GROUP BY c.id ORDER BY c.nombre, c.id").fetchall()
+
+
+@router.get("/{cliente_id}")
+def obtener_cliente(cliente_id: int, db=Depends(get_connection)):
+    result = db.execute(SELECT_CLIENTES + " WHERE c.id = %s GROUP BY c.id", (cliente_id,)).fetchone()
+    if not result:
+        raise HTTPException(404, "Cliente no encontrado")
+    return result
+
+
+@router.post("", status_code=201)
+def crear_cliente(data: ClienteNuevo, db=Depends(get_connection)):
+    result = db.execute("INSERT INTO clientes(nombre, empresa, correo, telefono) VALUES (%s, %s, %s, %s) RETURNING id::text, nombre, empresa, correo, telefono", (data.nombre, data.empresa, data.correo, data.telefono)).fetchone()
+    db.commit()
+    return {**result, "total_atenciones": 0, "tiempo_promedio_min": 0}

@@ -1,9 +1,13 @@
-from fastapi import FastAPI, Query
+from fastapi import FastAPI, Query, Request
+from fastapi.responses import JSONResponse
+import logging
+import psycopg
+from app.api.metricas import router as metricas_router
+from app.api.clientes import router as clientes_router
+from app.api.comentarios import router as comentarios_router
 from fastapi.middleware.cors import CORSMiddleware
-from typing import List, Optional
 from pydantic import BaseModel
 import numpy as np
-from scipy import stats
 from scipy.optimize import minimize
 from scipy.interpolate import interp1d
 
@@ -12,6 +16,17 @@ app = FastAPI(
     description="API empresarial con cálculo científico (SciPy) y procesamiento de lenguaje natural (NLTK)",
     version="1.0.0"
 )
+
+app.include_router(metricas_router)
+app.include_router(clientes_router)
+app.include_router(comentarios_router)
+
+
+@app.exception_handler(psycopg.Error)
+async def database_error(request: Request, exc: psycopg.Error):
+    logging.getLogger(__name__).error("Database failure: %s", type(exc).__name__)
+    return JSONResponse(status_code=503, content={"detail": "Base de datos no disponible. Intenta nuevamente."})
+
 
 # Configuración de CORS
 app.add_middleware(
@@ -25,9 +40,6 @@ app.add_middleware(
 # ==========================================
 # MODELOS PYDANTIC
 # ==========================================
-class TiemposInput(BaseModel):
-    tiempos: List[float] = [12, 15, 18, 20, 11, 25, 19, 17, 14, 21]
-
 class OptimizacionInput(BaseModel):
     capacidad_minima: float = 40.0
     costo_base_a: float = 80.0
@@ -35,45 +47,6 @@ class OptimizacionInput(BaseModel):
 
 class MensajeInput(BaseModel):
     mensaje: str
-
-class ComentarioNuevo(BaseModel):
-    cliente_nombre: str
-    fecha: str
-    tiempo_atencion_minutos: float
-    comentario: str
-    categoria: Optional[str] = "soporte"
-    sentimiento: Optional[str] = "positivo"
-
-# Base de datos en memoria para Reto Final
-db_comentarios = [
-    {
-        "id": "1",
-        "cliente_nombre": "Carlos Mendoza",
-        "fecha": "2026-09-01",
-        "tiempo_atencion_minutos": 15,
-        "comentario": "Excelente atención y resolución rápida de la incidencia en los servidores.",
-        "categoria": "soporte",
-        "sentimiento": "positivo"
-    },
-    {
-        "id": "2",
-        "cliente_nombre": "Mariana Silva",
-        "fecha": "2026-09-01",
-        "tiempo_atencion_minutos": 25,
-        "comentario": "Demora en la entrega del reporte mensual, hubo retrasos en el canal de atención.",
-        "categoria": "reclamo",
-        "sentimiento": "negativo"
-    },
-    {
-        "id": "3",
-        "cliente_nombre": "Tech Corp S.A.C.",
-        "fecha": "2026-09-02",
-        "tiempo_atencion_minutos": 12,
-        "comentario": "Quisiera cotizar la ampliación de licencias para el área de desarrollo.",
-        "categoria": "ventas",
-        "sentimiento": "neutral"
-    }
-]
 
 # ==========================================
 # ENDPOINTS BÁSICOS Y SCIPY
@@ -84,50 +57,6 @@ def root():
         "status": "online",
         "proyecto": "Empresa Inteligente",
         "librerias": ["FastAPI", "SciPy", "NLTK", "NumPy"]
-    }
-
-# Ejercicio 1: Estadística de Tiempos de Atención
-@app.get("/api/metricas-atencion")
-def get_metricas_atencion():
-    tiempos = np.array([12, 15, 18, 20, 11, 25, 19, 17, 14, 21], dtype=float)
-    media = float(np.mean(tiempos))
-    desv = float(np.std(tiempos, ddof=1))
-    mediana = float(np.median(tiempos))
-    varianza = float(np.var(tiempos, ddof=1))
-    cv = float((desv / media) * 100) if media != 0 else 0.0
-
-    return {
-        "tiempos": tiempos.tolist(),
-        "total_registros": len(tiempos),
-        "media": round(media, 2),
-        "desviacion_estandar": round(desv, 2),
-        "mediana": round(mediana, 2),
-        "varianza": round(varianza, 2),
-        "coeficiente_variacion": round(cv, 2),
-        "interpretacion": "Variabilidad moderada en los tiempos de atención"
-    }
-
-@app.post("/api/metricas-atencion")
-def calcular_metricas_personalizadas(data: TiemposInput):
-    tiempos = np.array(data.tiempos, dtype=float)
-    if len(tiempos) < 2:
-        return {"error": "Se requieren al menos 2 datos"}
-    
-    media = float(np.mean(tiempos))
-    desv = float(np.std(tiempos, ddof=1))
-    mediana = float(np.median(tiempos))
-    varianza = float(np.var(tiempos, ddof=1))
-    cv = float((desv / media) * 100) if media != 0 else 0.0
-
-    return {
-        "tiempos": tiempos.tolist(),
-        "total_registros": len(tiempos),
-        "media": round(media, 2),
-        "desviacion_estandar": round(desv, 2),
-        "mediana": round(mediana, 2),
-        "varianza": round(varianza, 2),
-        "coeficiente_variacion": round(cv, 2),
-        "interpretacion": "Cálculo en vivo con scipy.stats"
     }
 
 # Ejercicio 2: Optimización de recursos con scipy.optimize.minimize
@@ -299,19 +228,6 @@ def buscar_servicios(q: str = Query("")):
 # ==========================================
 # RETO FINAL: COMENTARIOS Y TIEMPOS
 # ==========================================
-@app.get("/api/comentarios")
-def listar_comentarios(fecha: Optional[str] = Query(None)):
-    if fecha and fecha.strip():
-        return [c for c in db_comentarios if c["fecha"] == fecha]
-    return db_comentarios
-
-@app.post("/api/comentarios")
-def crear_comentario(comentario: ComentarioNuevo):
-    nuevo = comentario.model_dump()
-    nuevo["id"] = str(len(db_comentarios) + 1)
-    db_comentarios.insert(0, nuevo)
-    return nuevo
-
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=True)
