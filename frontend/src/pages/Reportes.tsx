@@ -41,9 +41,9 @@ export default function Reportes() {
         <h3 style={sH3}>Arquitectura del Sistema</h3>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '0.5rem' }}>
           {CAPAS.map((c) => (
-            <div key={c.capa} style={{ display: 'grid', gridTemplateColumns: '140px 1fr', gap: '1rem', backgroundColor: '#fff', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '0.75rem 1rem', alignItems: 'center' }}>
-              <span style={{ fontWeight: 700, fontSize: '0.85rem', color: '#0f172a' }}>{c.capa}</span>
-              <span style={{ fontSize: '0.85rem', color: '#475569' }}>{c.desc}</span>
+            <div key={c.capa} style={{ display: 'grid', gridTemplateColumns: '140px 1fr', gap: '1rem', backgroundColor: 'var(--card-bg)', border: '1px solid var(--border-color)', borderRadius: '10px', padding: '0.75rem 1rem', alignItems: 'center', boxShadow: 'var(--card-shadow)' }}>
+              <span style={{ fontWeight: 700, fontSize: '0.85rem', color: 'var(--primary)' }}>{c.capa}</span>
+              <span style={{ fontSize: '0.85rem', color: 'var(--text-primary)' }}>{c.desc}</span>
             </div>
           ))}
         </div>
@@ -55,16 +55,16 @@ export default function Reportes() {
         <div style={card}>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
             <thead>
-              <tr style={{ borderBottom: '2px solid #e2e8f0', color: '#64748b', textAlign: 'left' }}>
+              <tr style={{ borderBottom: '2px solid var(--border-color)', color: 'var(--text-secondary)', textAlign: 'left' }}>
                 <th style={th}>Criterio</th><th style={th}>Peso</th><th style={th}>Evidencia requerida</th>
               </tr>
             </thead>
             <tbody>
               {CRITERIOS.map((c) => (
-                <tr key={c.criterio} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                <tr key={c.criterio} style={{ borderBottom: '1px solid var(--border-color)' }}>
                   <td style={td}><strong>{c.criterio}</strong></td>
-                  <td style={{ ...td, fontWeight: 700, color: '#0f172a' }}>{c.peso}</td>
-                  <td style={{ ...td, color: '#475569' }}>{c.evidencia}</td>
+                  <td style={{ ...td, fontWeight: 700, color: 'var(--primary)' }}>{c.peso}</td>
+                  <td style={{ ...td, color: 'var(--text-primary)' }}>{c.evidencia}</td>
                 </tr>
               ))}
             </tbody>
@@ -78,7 +78,7 @@ export default function Reportes() {
         <div style={card}>
           <ul style={{ margin: 0, padding: '0 0 0 1.25rem', display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
             {PRACTICAS.map((p, i) => (
-              <li key={i} style={{ fontSize: '0.85rem', color: '#334155' }}>{p}</li>
+              <li key={i} style={{ fontSize: '0.85rem', color: 'var(--text-primary)' }}>{p}</li>
             ))}
           </ul>
         </div>
@@ -89,7 +89,7 @@ export default function Reportes() {
         <h3 style={sH3}>Entregables del Reto Final</h3>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1rem', marginTop: '0.5rem' }}>
           {['Codigo fuente', 'API documentada', 'Interfaz web', 'Modelo de datos', 'Pruebas', 'Informe de resultados'].map((e) => (
-            <div key={e} style={{ backgroundColor: '#fff', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '0.85rem 1rem', fontSize: '0.85rem', fontWeight: 500, color: '#1e293b', textAlign: 'center' }}>
+            <div key={e} style={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--border-color)', borderRadius: '10px', padding: '0.85rem 1rem', fontSize: '0.85rem', fontWeight: 500, color: 'var(--text-primary)', textAlign: 'center', boxShadow: 'var(--card-shadow)' }}>
               {e}
             </div>
           ))}
@@ -99,10 +99,10 @@ export default function Reportes() {
   );
 }
 
-const card: React.CSSProperties       = { backgroundColor: '#fff', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '1rem 1.25rem', boxSizing: 'border-box' };
-const pageHeader: React.CSSProperties  = { borderBottom: '1px solid #e2e8f0', paddingBottom: '1rem' };
-const h2: React.CSSProperties         = { margin: 0, fontSize: '1.5rem', fontWeight: 700, color: '#0f172a' };
-const sub: React.CSSProperties        = { margin: '0.2rem 0 0', fontSize: '0.85rem', color: '#64748b' };
-const sH3: React.CSSProperties        = { fontSize: '1rem', fontWeight: 600, color: '#1e293b', margin: '0 0 0.5rem' };
+const card: React.CSSProperties       = { backgroundColor: 'var(--card-bg)', border: '1px solid var(--border-color)', borderRadius: '10px', padding: '1rem 1.25rem', boxSizing: 'border-box', boxShadow: 'var(--card-shadow)' };
+const pageHeader: React.CSSProperties  = { borderBottom: '1px solid var(--border-color)', paddingBottom: '1rem' };
+const h2: React.CSSProperties         = { margin: 0, fontSize: '1.5rem', fontWeight: 700, color: 'var(--text-primary)' };
+const sub: React.CSSProperties        = { margin: '0.2rem 0 0', fontSize: '0.85rem', color: 'var(--text-secondary)' };
+const sH3: React.CSSProperties        = { fontSize: '1rem', fontWeight: 600, color: 'var(--text-primary)', margin: '0 0 0.5rem' };
 const th: React.CSSProperties         = { padding: '0.5rem 0.6rem', fontWeight: 600 };
 const td: React.CSSProperties         = { padding: '0.5rem 0.6rem' };

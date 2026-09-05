@@ -53,8 +53,8 @@ export default function AnalisisNLP() {
     }
   };
 
-  const categoriaColor: Record<string, string> = { ventas: '#1d4ed8', soporte: '#0284c7', reclamo: '#dc2626' };
-  const categoriaBg:    Record<string, string> = { ventas: '#eff6ff', soporte: '#f0f9ff', reclamo: '#fef2f2' };
+  const categoriaColor: Record<string, string> = { ventas: 'var(--primary)', soporte: 'var(--secondary-blue)', reclamo: 'var(--danger)' };
+  const categoriaBg:    Record<string, string> = { ventas: 'var(--surface-muted)', soporte: 'var(--surface-muted)', reclamo: 'var(--danger-bg)' };
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
@@ -88,14 +88,14 @@ export default function AnalisisNLP() {
             <div style={card}>
               <h3 style={sH3}>Resultado de la Clasificacion</h3>
               <div style={{ textAlign: 'center', padding: '1.5rem 0' }}>
-                <div style={{ display: 'inline-block', padding: '0.5rem 1.5rem', borderRadius: '4px', fontSize: '1.25rem', fontWeight: 700, backgroundColor: categoriaBg[clasif.categoria] ?? '#f8fafc', color: categoriaColor[clasif.categoria] ?? '#334155', border: `2px solid ${categoriaColor[clasif.categoria] ?? '#e2e8f0'}`, textTransform: 'capitalize' }}>
+                <div style={{ display: 'inline-block', padding: '0.5rem 1.5rem', borderRadius: '999px', fontSize: '1.25rem', fontWeight: 700, backgroundColor: categoriaBg[clasif.categoria] ?? 'var(--surface-muted)', color: categoriaColor[clasif.categoria] ?? 'var(--text-primary)', border: `2px solid ${categoriaColor[clasif.categoria] ?? 'var(--border-color)'}`, textTransform: 'capitalize' }}>
                   {clasif.categoria}
                 </div>
-                <p style={{ margin: '0.75rem 0 0', fontSize: '0.85rem', color: '#64748b' }}>
+                <p style={{ margin: '0.75rem 0 0', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
                   Confianza: <strong>{(clasif.confianza * 100).toFixed(0)}%</strong>
                 </p>
               </div>
-              <div style={{ backgroundColor: '#f8fafc', borderRadius: '4px', padding: '0.6rem 0.8rem', fontSize: '0.78rem', color: '#475569', fontFamily: 'monospace' }}>
+              <div style={{ backgroundColor: 'var(--surface-muted)', borderRadius: '6px', padding: '0.6rem 0.8rem', fontSize: '0.78rem', color: 'var(--text-secondary)', fontFamily: 'monospace' }}>
                 Mensaje analizado: "{mensaje.slice(0, 60)}{mensaje.length > 60 ? '...' : ''}"
               </div>
             </div>
@@ -119,17 +119,17 @@ export default function AnalisisNLP() {
           {resultados.length > 0 && (
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
               <thead>
-                <tr style={{ borderBottom: '1px solid #cbd5e1', color: '#64748b', textAlign: 'left' }}>
+                <tr style={{ borderBottom: '1px solid var(--border-color)', color: 'var(--text-secondary)', textAlign: 'left' }}>
                   <th style={th}>Servicio encontrado</th>
                   <th style={th}>Relevancia</th>
                 </tr>
               </thead>
               <tbody>
                 {resultados.map((r, i) => (
-                  <tr key={i} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                  <tr key={i} style={{ borderBottom: '1px solid var(--border-color)' }}>
                     <td style={td}><strong>{r.servicio}</strong></td>
                     <td style={td}>
-                      <span style={{ fontSize: '0.75rem', padding: '0.15rem 0.5rem', borderRadius: '3px', backgroundColor: r.relevancia === 'Alta' ? '#f0fdf4' : '#f8fafc', color: r.relevancia === 'Alta' ? '#166534' : '#475569', border: '1px solid', borderColor: r.relevancia === 'Alta' ? '#bbf7d0' : '#e2e8f0' }}>
+                      <span style={{ fontSize: '0.75rem', padding: '0.15rem 0.5rem', borderRadius: '3px', backgroundColor: r.relevancia === 'Alta' ? 'var(--success-bg)' : 'var(--surface-muted)', color: r.relevancia === 'Alta' ? 'var(--success)' : 'var(--text-secondary)', border: '1px solid', borderColor: r.relevancia === 'Alta' ? 'var(--success-border)' : 'var(--border-color)' }}>
                         {r.relevancia}
                       </span>
                     </td>
@@ -147,20 +147,20 @@ export default function AnalisisNLP() {
 function SectionTitle({ title, badge }: { title: string; badge: string }) {
   return (
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-      <h3 style={{ fontSize: '1rem', fontWeight: 600, color: '#1e293b', margin: 0 }}>{title}</h3>
-      <code style={{ fontSize: '0.7rem', color: '#64748b', fontFamily: 'monospace', backgroundColor: '#f1f5f9', padding: '0.2rem 0.5rem', borderRadius: '4px' }}>{badge}</code>
+      <h3 style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>{title}</h3>
+      <code style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', fontFamily: 'monospace', backgroundColor: 'var(--surface-muted)', padding: '0.2rem 0.5rem', borderRadius: '4px' }}>{badge}</code>
     </div>
   );
 }
 
-const card: React.CSSProperties       = { backgroundColor: '#fff', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '1rem 1.25rem', boxSizing: 'border-box' };
-const pageHeader: React.CSSProperties  = { borderBottom: '1px solid #e2e8f0', paddingBottom: '1rem' };
-const h2: React.CSSProperties         = { margin: 0, fontSize: '1.5rem', fontWeight: 700, color: '#0f172a' };
-const sub: React.CSSProperties        = { margin: '0.2rem 0 0', fontSize: '0.85rem', color: '#64748b' };
-const sH3: React.CSSProperties        = { fontSize: '0.95rem', fontWeight: 600, color: '#1e293b', margin: '0 0 0.5rem' };
-const desc: React.CSSProperties       = { fontSize: '0.82rem', color: '#64748b', margin: '0 0 0.75rem' };
-const labelSt: React.CSSProperties    = { fontSize: '0.82rem', fontWeight: 600, color: '#475569', display: 'flex', flexDirection: 'column' };
-const input: React.CSSProperties      = { padding: '0.45rem 0.6rem', border: '1px solid #cbd5e1', borderRadius: '4px', fontSize: '0.85rem', width: '100%', boxSizing: 'border-box' };
-const btnDark: React.CSSProperties    = { backgroundColor: '#0f172a', color: '#fff', border: 'none', padding: '0.5rem 1rem', borderRadius: '4px', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer' };
+const card: React.CSSProperties       = { backgroundColor: 'var(--card-bg)', border: '1px solid var(--border-color)', borderRadius: '10px', padding: '1rem 1.25rem', boxSizing: 'border-box', boxShadow: 'var(--card-shadow)' };
+const pageHeader: React.CSSProperties  = { borderBottom: '1px solid var(--border-color)', paddingBottom: '1rem' };
+const h2: React.CSSProperties         = { margin: 0, fontSize: '1.5rem', fontWeight: 700, color: 'var(--text-primary)' };
+const sub: React.CSSProperties        = { margin: '0.2rem 0 0', fontSize: '0.85rem', color: 'var(--text-secondary)' };
+const sH3: React.CSSProperties        = { fontSize: '0.95rem', fontWeight: 600, color: 'var(--text-primary)', margin: '0 0 0.5rem' };
+const desc: React.CSSProperties       = { fontSize: '0.82rem', color: 'var(--text-secondary)', margin: '0 0 0.75rem' };
+const labelSt: React.CSSProperties    = { fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-secondary)', display: 'flex', flexDirection: 'column' };
+const input: React.CSSProperties      = { padding: '0.45rem 0.6rem', border: '1px solid var(--border-color)', borderRadius: '6px', fontSize: '0.85rem', width: '100%', boxSizing: 'border-box', backgroundColor: 'var(--surface-muted)', color: 'var(--text-primary)' };
+const btnDark: React.CSSProperties    = { backgroundColor: 'var(--button-bg)', color: 'var(--button-text)', border: 'none', padding: '0.5rem 1rem', borderRadius: '999px', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer' };
 const th: React.CSSProperties         = { padding: '0.4rem', fontWeight: 600 };
 const td: React.CSSProperties         = { padding: '0.4rem' };

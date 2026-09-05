@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import type { CSSProperties } from 'react';
 // Importamos componentes de gráficos simples
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, BarChart, Bar } from 'recharts';
 
@@ -25,7 +26,7 @@ const DEMO_METRICAS: Metricas = { media: 17.02, desviacion_estandar: 4.29, media
 const DEMO_KEYWORDS: Keyword[] = [{ palabra: 'servicio', frecuencia: 12 }, { palabra: 'atencion', frecuencia: 9 }, { palabra: 'rapido', frecuencia: 7 }, { palabra: 'soporte', frecuencia: 5 }];
 const DEMO_COMENTARIOS: Comentario[] = [
   { id: '1', cliente_nombre: 'Carlos Mendoza', fecha: '2026-09-01', tiempo_atencion_minutos: 15, comentario: 'Excelente atencion y soporte rapido.' },
-  { id: '2', cliente_nombre: 'Mariana Silva',  fecha: '2026-09-01', tiempo_atencion_minutos: 25, comentario: 'Demora en la entrega del informe.' },
+  { id: '2', cliente_nombre: 'Mariana Silva', fecha: '2026-09-01', tiempo_atencion_minutos: 25, comentario: 'Demora en la entrega del informe.' },
 ];
 
 // Datos ficticios para rellenar tus nuevos gráficos simulando SciPy
@@ -48,10 +49,10 @@ function AnimatedKpiCard({ label, targetValue, unit = "min" }: KpiCardProps) {
 
   useEffect(() => {
     if (!targetValue) return;
-    setDisplayValue(0); // Reiniciar cada vez que entras o carga
-    
+    setDisplayValue(0);
+
     let inicio = 0;
-    const duracion = 1000; // 1 segundo que tarda en subir el número
+    const duracion = 1000;
     const pasos = 30;
     const incremento = targetValue / pasos;
     const intervaloTiempo = duracion / pasos;
@@ -69,31 +70,40 @@ function AnimatedKpiCard({ label, targetValue, unit = "min" }: KpiCardProps) {
     return () => clearInterval(cronometro);
   }, [targetValue]);
 
-  // Formatear visualmente a estilo reloj "17:02" si es necesario o dejar decimal limpio
-  const stringValue = displayValue.toFixed(2).replace('.', ':');
+  const stringValue = displayValue.toFixed(2);
 
   return (
     <div style={estilos.kpiCardGranel}>
-      <div style={estilos.kpiTextContainer}>
-        <p style={estilos.kpiLabelBig}>{label}</p>
-      </div>
-      <div style={estilos.kpiNumberContainer}>
-        <span style={estilos.kpiValueBig}>{stringValue}</span>
-        <span style={estilos.kpiUnitBig}>{unit}</span>
+      <div style={estilos.kpiContent}>
+
+        <p style={estilos.kpiLabelBig}>
+          {label}
+        </p>
+
+        <div style={estilos.kpiNumberContainer}>
+          <span style={estilos.kpiValueBig}>
+            {stringValue}
+          </span>
+
+          <span style={estilos.kpiUnitBig}>
+            {unit}
+          </span>
+        </div>
+
       </div>
     </div>
   );
 }
 
 export default function Dashboard() {
-  const [metricas, setMetricas]   = useState<Metricas | null>(null);
-  const [keywords, setKeywords]   = useState<Keyword[]>([]);
+  const [metricas, setMetricas] = useState<Metricas | null>(null);
+  const [keywords, setKeywords] = useState<Keyword[]>([]);
   const [comentarios, setComentarios] = useState<Comentario[]>([]);
   const [fechaFiltro, setFechaFiltro] = useState('');
-  const [online, setOnline]       = useState<boolean | null>(null);
-  const [cliente, setCliente]     = useState('');
-  const [tiempo,  setTiempo]      = useState(15);
-  const [texto,   setTexto]       = useState('');
+  const [online, setOnline] = useState<boolean | null>(null);
+  const [cliente, setCliente] = useState('');
+  const [tiempo, setTiempo] = useState(15);
+  const [texto, setTexto] = useState('');
 
   const BASE = '/api';
 
@@ -133,9 +143,8 @@ export default function Dashboard() {
 
   return (
     <div style={estilos.dashboardWrapper}>
-      
-      {/* Cabecera con el Fondo Degradado Azul solicitado */}
-            {/* Cabecera (Restaurada al diseño original) */}
+
+      {/* Cabecera (Restaurada al diseño original) */}
       <div style={estilos.cabeceraOriginal}>
         <div>
           <p style={estilos.cabeceraSubtitleOriginal}>Panel de Control Ejecutivo</p>
@@ -143,14 +152,14 @@ export default function Dashboard() {
           <p style={estilos.cabeceraDescOriginal}>SciPy (calculo numerico) + NLTK (procesamiento de texto) en arquitectura desacoplada.</p>
         </div>
         <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
-          <span style={{ 
-            fontSize: '0.78rem', 
-            padding: '0.3rem 0.7rem', 
-            borderRadius: '4px', 
-            border: '1px solid #e2e8f0', 
-            backgroundColor: online ? '#f0fdf4' : '#f8fafc', 
-            color: online ? '#166534' : '#475569', 
-            fontWeight: 500 
+          <span style={{
+            fontSize: '0.78rem',
+            padding: '0.3rem 0.7rem',
+            borderRadius: '4px',
+            border: '1px solid var(--border-color)',
+            backgroundColor: online ? 'var(--success-bg)' : 'var(--surface-muted)',
+            color: online ? 'var(--success)' : 'var(--text-secondary)',
+            fontWeight: 500
           }}>
             {online === null ? 'Conectando...' : online ? 'Backend Activo (:8000)' : 'Modo Demostracion'}
           </span>
@@ -162,9 +171,8 @@ export default function Dashboard() {
       <section style={{ padding: '0 1.5rem' }}>
         <div style={estilos.sectionHeader}>
           <h3 style={estilos.sectionTitle}>1. Indicadores de Tiempos de Atencion — SciPy</h3>
-          <code style={estilos.badge}>scipy.stats</code>
         </div>
-        
+
         {/* Fila superior: Las dos grandes tarjetas animadas (Tiempo Promedio y Mediana) */}
         <div style={estilos.kpiRowTop}>
           <AnimatedKpiCard label="Tiempo Promedio" targetValue={metricas?.media ?? 17.02} />
@@ -179,9 +187,9 @@ export default function Dashboard() {
             <div style={{ width: '100%', height: 180 }}>
               <ResponsiveContainer>
                 <AreaChart data={DATA_GRAFICO_DISTRIBUCION}>
-                  <XAxis dataKey="name" stroke="#94a3b8" fontSize={11} />
+                  <XAxis dataKey="name" stroke="var(--text-secondary)" fontSize={11} />
                   <Tooltip />
-                  <Area type="monotone" dataKey="cantidad" stroke="#3b82f6" fillOpacity={0.1} fill="#3b82f6" />
+                  <Area type="monotone" dataKey="cantidad" stroke="var(--primary)" fillOpacity={0.15} fill="var(--primary)" />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
@@ -193,9 +201,9 @@ export default function Dashboard() {
             <div style={{ width: '100%', height: 180 }}>
               <ResponsiveContainer>
                 <BarChart data={DATA_GRAFICO_DISTRIBUCION}>
-                  <XAxis dataKey="name" stroke="#94a3b8" fontSize={11} />
+                  <XAxis dataKey="name" stroke="var(--text-secondary)" fontSize={11} />
                   <Tooltip />
-                  <Bar dataKey="cantidad" fill="#1067b9" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="cantidad" fill="var(--secondary-blue)" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -207,171 +215,184 @@ export default function Dashboard() {
       <section style={{ padding: '0 1.5rem' }}>
         <div style={estilos.sectionHeader}>
           <h3 style={estilos.sectionTitle}>2. Terminos Frecuentes en Comentarios — NLTK</h3>
-          <code style={estilos.badge}>Counter.most_common</code>
         </div>
         <div style={estilos.cardStandard}>
           <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
             {keywords.map((k) => (
               <span key={k.palabra} style={estilos.keywordTag}>
-                {k.palabra} <strong style={{ color: '#1e293b' }}>({k.frecuencia})</strong>
+                {k.palabra} <strong style={{ color: 'var(--text-primary)' }}>({k.frecuencia})</strong>
               </span>
             ))}
           </div>
         </div>
       </section>
+
+      
     </div>
   );
 }
 
-/* ── Estilos encapsulados en un Objeto JavaScript Completos ── */
-
-const estilos = {
+const estilos: Record<string, CSSProperties> = {
   dashboardWrapper: {
     display: 'flex',
-    flexDirection: 'column' as const,
-    gap: '2rem',
-    fontFamily: 'system-ui, sans-serif',
-    backgroundColor: '#f8fafc',
-    minHeight: '100vh',
-    paddingBottom: '2rem',
-    padding: '1rem',
-    paddingTop: '80px' // ← AÑADE ESTA LÍNEA (Ajusta los px según el alto de tu barra azul)
+    flexDirection: 'column',
+    gap: '0.5rem',
+    paddingBottom: '3rem',
   },
-
-  /* Cabecera Clásica Original */
   cabeceraOriginal: {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    flexWrap: 'wrap' as const,
-    gap: '1rem',
-    borderBottom: '1px solid #e2e8f0',
-    paddingBottom: '1.25rem'
+    padding: '1.5rem',
+    backgroundColor: 'transparent', // Se hace transparente para unirse al fondo general
+    borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
   },
   cabeceraSubtitleOriginal: {
     margin: 0,
-    fontSize: '0.75rem',
+    fontSize: '0.8rem',
+    color: 'var(--primary)',
+    textTransform: 'uppercase',
+    letterSpacing: '0.08em',
     fontWeight: 600,
-    color: '#64748b',
-    textTransform: 'uppercase' as const,
-    letterSpacing: '0.05em'
   },
   cabeceraTitleOriginal: {
-    margin: '0.2rem 0 0.25rem',
-    fontSize: '1.5rem',
+    margin: '0.15rem 0',
+    fontSize: '2rem',
+    color: 'var(--text-primary)',
     fontWeight: 700,
-    color: '#0f172a'
+    letterSpacing: '-0.02em',
   },
   cabeceraDescOriginal: {
     margin: 0,
-    fontSize: '0.85rem',
-    color: '#64748b'
+    fontSize: '0.875rem',
+    color: 'var(--text-secondary)',
   },
   btnDark: {
-    backgroundColor: '#0c296d',
-    color: '#ffffff',
-    padding: '0.4rem 0.9rem',
-    borderRadius: '4px',
+    backgroundColor: 'var(--button-bg)',
+    color: 'var(--button-text)',
     border: 'none',
+    padding: '0.5rem 1.25rem',
+    borderRadius: '9999px',
     fontSize: '0.85rem',
-    fontWeight: 500,
-    cursor: 'pointer'
+    fontWeight: 600,
+    cursor: 'pointer',
   },
-  /* Sección e Indicadores SciPy */
   sectionHeader: {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: '1rem'
+    marginBottom: '1rem',
   },
   sectionTitle: {
     margin: 0,
-    fontSize: '1.1rem',
+    fontSize: '1.25rem',
+    color: 'var(--text-primary)',
     fontWeight: 700,
-    color: '#334155'
   },
-  badge: {
-    backgroundColor: '#ffffff',
-    color: '#64748b',
-    padding: '0.2rem 0.5rem',
-    borderRadius: '4px',
-    fontSize: '0.8rem',
-    border: '1px solid #e2e8f0'
-  },
+
   kpiRowTop: {
-    display: 'grid',
-    gridTemplateColumns: '1fr 1fr',
+    display: 'flex',
     gap: '1.5rem',
-    marginBottom: '1.5rem'
+    marginBottom: '1.5rem',
   },
+  // Tarjetas oscuras semitransparentes (Glassmorphism)
   kpiCardGranel: {
-    backgroundColor: '#ffffff',
-    borderRadius: '12px',
-    padding: '1.5rem 2rem',
-    border: '1px solid #e2e8f0',
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)'
+    flex: 1,
+    backgroundColor: 'var(--card-bg)',
+    border: '1px solid var(--border-color)',
+    borderRadius: '18px',
+    padding: '1.5rem',
+    boxShadow: 'var(--card-shadow)',
+    transition: 'background-color 0.3s ease, border-color 0.3s ease',
   },
-  kpiTextContainer: {
+  kpiContent: {
     display: 'flex',
-    alignItems: 'center'
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '1.5rem',
+    minHeight: '100px',
   },
   kpiLabelBig: {
     margin: 0,
-    fontSize: '1.3rem',
-    fontWeight: 800,
-    color: '#0f172a',
+    fontSize: '1.15rem',
+    color: 'var(--text-primary)',
+    fontWeight: 700,
+    lineHeight: 1.1,
+    textAlign: 'right',
     maxWidth: '120px',
-    lineHeight: '1.2'
   },
   kpiNumberContainer: {
     display: 'flex',
-    alignItems: 'baseline',
-    gap: '0.25rem'
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
+
   kpiValueBig: {
-    fontSize: '2.5rem',
+    fontSize: '2.7rem',
+
+    lineHeight: '1',
+
     fontWeight: 800,
-    color: '#206e9b'
+
+    color: 'var(--text-primary)',
   },
   kpiUnitBig: {
     fontSize: '1.2rem',
+
+    lineHeight: '1.2',
+
+    color: 'var(--text-secondary)',
+
     fontWeight: 700,
-    color: '#0f172a'
+
+    marginTop: '0.15rem',
   },
-  /* Bloques de Gráficos Inferiores */
   chartsGrid: {
-    display: 'grid',
-    gridTemplateColumns: '1fr 1fr',
-    gap: '1.5rem'
+    display: 'flex',
+    gap: '1.5rem',
   },
   chartCard: {
-    backgroundColor: '#ffffff',
-    borderRadius: '12px',
-    padding: '1.25rem',
-    border: '1px solid #e2e8f0'
+    flex: 1,
+
+    backgroundColor: 'var(--card-bg)',
+
+    border:
+      '1px solid var(--border-color)',
+
+    borderRadius: '16px',
+
+    padding: '1.5rem',
+
+    boxShadow:
+      'var(--card-shadow)',
+
+    transition:
+      'all 0.3s ease',
   },
   chartCardLabel: {
     margin: '0 0 1rem 0',
-    fontSize: '0.85rem',
+
+    fontSize: '0.875rem',
+
+    color: 'var(--text-primary)',
+
     fontWeight: 600,
-    color: '#64748b'
   },
-  /* Sección NLTK */
   cardStandard: {
-    backgroundColor: '#ffffff',
-    border: '1px solid #e2e8f0',
-    borderRadius: '8px',
-    padding: '1.25rem'
+    backgroundColor: 'var(--card-bg)',
+    border: '1px solid var(--border-color)',
+    borderRadius: '16px',
+    padding: '1.25rem',
+    boxShadow: 'var(--card-shadow)',
   },
   keywordTag: {
-    backgroundColor: '#f1f5f9',
-    border: '1px solid #e2e8f0',
+    backgroundColor: 'var(--surface-muted)',
+    border: '1px solid var(--border-color)',
     padding: '0.35rem 0.75rem',
-    borderRadius: '6px',
+    borderRadius: '999px',
     fontSize: '0.82rem',
-    color: '#475569'
-  }
-};
+    color: 'var(--text-secondary)',
+  },
+  
+}

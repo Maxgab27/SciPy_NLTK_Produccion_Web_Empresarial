@@ -49,7 +49,7 @@ export default function Optimizacion() {
       <div style={card}>
         <h3 style={sectionH3}>Situacion del Ejercicio</h3>
         <p style={p}>Una empresa quiere reducir el costo de operacion de dos recursos (A y B). Se define una funcion de costo:</p>
-        <div style={{ backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', padding: '0.75rem 1rem', borderRadius: '4px', fontFamily: 'monospace', fontSize: '0.85rem', color: '#0f172a', margin: '0.75rem 0' }}>
+        <div style={{ backgroundColor: 'var(--surface-muted)', border: '1px solid var(--border-color)', padding: '0.75rem 1rem', borderRadius: '6px', fontFamily: 'monospace', fontSize: '0.85rem', color: 'var(--text-primary)', margin: '0.75rem 0' }}>
           costo(a, b) = costoA·a + costoB·b + 10·(a − 3)²
         </div>
         <p style={p}><strong>Restriccion:</strong> 10·a + 5·b ≥ capacidad_minima (asegurar cobertura operativa)</p>
@@ -88,7 +88,7 @@ export default function Optimizacion() {
               <KpiRow label="Recurso B optimo"  value={`${resultado.recurso_b} unidades`}  />
               <KpiRow label="Costo minimo"      value={`S/ ${resultado.costo_optimo}`}       highlight />
               {resultado.costo_inicial !== undefined && (
-                <div style={{ backgroundColor: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '4px', padding: '0.6rem 0.8rem', fontSize: '0.82rem', color: '#166534' }}>
+                <div style={{ backgroundColor: 'var(--success-bg)', border: '1px solid var(--success-border)', borderRadius: '6px', padding: '0.6rem 0.8rem', fontSize: '0.82rem', color: 'var(--success)' }}>
                   Ahorro vs. punto inicial: S/ {(resultado.costo_inicial - resultado.costo_optimo).toFixed(2)}
                 </div>
               )}
@@ -102,19 +102,19 @@ export default function Optimizacion() {
 
 function KpiRow({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
   return (
-    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.5rem 0', borderBottom: '1px solid #f1f5f9' }}>
-      <span style={{ fontSize: '0.85rem', color: '#475569' }}>{label}</span>
-      <span style={{ fontSize: '1rem', fontWeight: 700, color: highlight ? '#0f172a' : '#334155' }}>{value}</span>
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.5rem 0', borderBottom: '1px solid var(--border-color)' }}>
+      <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{label}</span>
+      <span style={{ fontSize: '1rem', fontWeight: 700, color: highlight ? 'var(--primary)' : 'var(--text-primary)' }}>{value}</span>
     </div>
   );
 }
 
-const card: React.CSSProperties      = { backgroundColor: '#fff', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '1rem 1.25rem', boxSizing: 'border-box' };
-const pageHeader: React.CSSProperties = { borderBottom: '1px solid #e2e8f0', paddingBottom: '1rem' };
-const h2: React.CSSProperties        = { margin: 0, fontSize: '1.5rem', fontWeight: 700, color: '#0f172a' };
-const sub: React.CSSProperties       = { margin: '0.2rem 0 0', fontSize: '0.85rem', color: '#64748b' };
-const sectionH3: React.CSSProperties = { fontSize: '0.95rem', fontWeight: 600, color: '#1e293b', margin: '0 0 0.25rem' };
-const p: React.CSSProperties         = { margin: '0.4rem 0', fontSize: '0.85rem', color: '#334155' };
-const labelSt: React.CSSProperties   = { display: 'flex', flexDirection: 'column', gap: '0.25rem', fontSize: '0.82rem', fontWeight: 600, color: '#475569' };
-const input: React.CSSProperties     = { padding: '0.45rem 0.6rem', border: '1px solid #cbd5e1', borderRadius: '4px', fontSize: '0.85rem', width: '100%', boxSizing: 'border-box', fontWeight: 400 };
-const btnDark: React.CSSProperties   = { backgroundColor: '#0f172a', color: '#fff', border: 'none', padding: '0.55rem', borderRadius: '4px', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer' };
+const card: React.CSSProperties      = { backgroundColor: 'var(--card-bg)', border: '1px solid var(--border-color)', borderRadius: '10px', padding: '1rem 1.25rem', boxSizing: 'border-box', boxShadow: 'var(--card-shadow)' };
+const pageHeader: React.CSSProperties = { borderBottom: '1px solid var(--border-color)', paddingBottom: '1rem' };
+const h2: React.CSSProperties        = { margin: 0, fontSize: '1.5rem', fontWeight: 700, color: 'var(--text-primary)' };
+const sub: React.CSSProperties       = { margin: '0.2rem 0 0', fontSize: '0.85rem', color: 'var(--text-secondary)' };
+const sectionH3: React.CSSProperties = { fontSize: '0.95rem', fontWeight: 600, color: 'var(--text-primary)', margin: '0 0 0.25rem' };
+const p: React.CSSProperties         = { margin: '0.4rem 0', fontSize: '0.85rem', color: 'var(--text-primary)' };
+const labelSt: React.CSSProperties   = { display: 'flex', flexDirection: 'column', gap: '0.25rem', fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-secondary)' };
+const input: React.CSSProperties     = { padding: '0.45rem 0.6rem', border: '1px solid var(--border-color)', borderRadius: '6px', fontSize: '0.85rem', width: '100%', boxSizing: 'border-box', fontWeight: 400, backgroundColor: 'var(--surface-muted)', color: 'var(--text-primary)' };
+const btnDark: React.CSSProperties   = { backgroundColor: 'var(--button-bg)', color: 'var(--button-text)', border: 'none', padding: '0.55rem', borderRadius: '999px', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer' };
